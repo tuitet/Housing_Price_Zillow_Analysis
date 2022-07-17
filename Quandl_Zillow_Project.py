@@ -13,25 +13,30 @@ import seaborn as sns
 import statsmodels
 import streamlit as st
 from bs4 import BeautifulSoup
-from joblib import dump, load
+from joblib import dump
+from joblib import load
 from numpy import log
 from pmdarima.arima.utils import ndiffs
 from skforecast.ForecasterAutoreg import ForecasterAutoreg
 from skforecast.ForecasterAutoregCustom import ForecasterAutoregCustom
 from skforecast.ForecasterAutoregMultiOutput import \
     ForecasterAutoregMultiOutput
-from skforecast.model_selection import (backtesting_forecaster,
-                                        grid_search_forecaster)
+from skforecast.model_selection import backtesting_forecaster
+from skforecast.model_selection import grid_search_forecaster
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import Lasso, LinearRegression
+from sklearn.linear_model import Lasso
+from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf, plot_predict
+from statsmodels.graphics.tsaplots import plot_acf
+from statsmodels.graphics.tsaplots import plot_pacf
+from statsmodels.graphics.tsaplots import plot_predict
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.arima_model import ARIMA
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from statsmodels.tsa.stattools import acf, adfuller
+from statsmodels.tsa.stattools import acf
+from statsmodels.tsa.stattools import adfuller
 
 matplotlib.use("TkAgg")
 
