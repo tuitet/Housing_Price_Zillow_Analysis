@@ -5,11 +5,14 @@
 
 **Dataset**: Popular housing platform Zillow stores housing price data down to the zip code level. Quandl collects this data and stores the time-series data in 3 tables:  
 - Zillow Data: Stores housing price data over time and region.
-- Zillow Indicators: Stores information on the type of house (for this analysis, we focus on single family homes). 
-- Zillow Regions: Stores region master data.
+- Zillow Indicators: Stores information on the type of house (for this analysis, we focused on single family homes). 
+- Zillow Regions: Stores region reference data.
 More details: https://data.nasdaq.com/databases/ZILLOW/documentation
 
-**Approach**: ..... classification methods can be used to predict outcomes based on observed data, and infer relationships between those observed features and the outcome. We will build 7 classification models that predict the variant (for the purpose of this analysis, whether it's the Original variant or Delta variant) and infer the relationship between the variant and the observed demographic and medical data.  
+**Approach**: After collecting and pre-processing the data, we use the cleaned dataset to perform 3 actions:
+- Visualize Housing Prices: We use Tableau to visualize house price changes over time and across the country.
+- Forecast future housing prices: We use several time-series approaches (... ) to analyze the existing data (including detrend and remove seasonality) and forecast house prices for the following year. 
+- Detect anomalous house prices (by region?): We use ___ anomaly detection approaches to identify housing prices that are distinctly different than the rest...
 
 **Results**: .........The 7 models perform similarly, but Extreme Gradient Boosting performs the best with a prediction accuracy of 64.19% and an Area Under Curve (AUC) of 62.43%. For inference, age group (those younger than 20 are especially more likely to contract the Delta variant, while those older than 40 skew towards the Original variant) and pre-existing medical conditions (those with pre-existing medical conditions were more likely to contract the Delta variant, while those without pre-existing medical conditions were more likely to contract the Original variant) have the strongest relationship with type of variant.  
 
