@@ -1,38 +1,37 @@
-from statsmodels.tsa.statespace.sarimax import SARIMAX
-from joblib import dump, load
-from skforecast.model_selection import backtesting_forecaster
-from skforecast.model_selection import grid_search_forecaster
-from skforecast.ForecasterAutoregMultiOutput import ForecasterAutoregMultiOutput
-from skforecast.ForecasterAutoregCustom import ForecasterAutoregCustom
-from skforecast.ForecasterAutoreg import ForecasterAutoreg
-from sklearn.pipeline import make_pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import mean_squared_error
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import Lasso
-from sklearn.linear_model import LinearRegression
-import pmdarima as pm
-from statsmodels.tsa.arima_model import ARIMA
-from statsmodels.tsa.stattools import acf
-from statsmodels.graphics.tsaplots import plot_predict
-from statsmodels.tsa.arima.model import ARIMA
-from pmdarima.arima.utils import ndiffs
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-from numpy import log
-from statsmodels.tsa.stattools import adfuller
-import statsmodels
 import datetime
-import streamlit as st
-from bs4 import BeautifulSoup
-import requests
 import re
 import warnings
-import seaborn as sns
+
+import matplotlib
 import matplotlib.pyplot as plt
 import nasdaqdatalink
-import pandas as pd
 import numpy as np
-import matplotlib
+import pandas as pd
+import pmdarima as pm
+import requests
+import seaborn as sns
+import statsmodels
+import streamlit as st
+from bs4 import BeautifulSoup
+from joblib import dump, load
+from numpy import log
+from pmdarima.arima.utils import ndiffs
+from skforecast.ForecasterAutoreg import ForecasterAutoreg
+from skforecast.ForecasterAutoregCustom import ForecasterAutoregCustom
+from skforecast.ForecasterAutoregMultiOutput import \
+    ForecasterAutoregMultiOutput
+from skforecast.model_selection import (backtesting_forecaster,
+                                        grid_search_forecaster)
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import Lasso, LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf, plot_predict
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.arima_model import ARIMA
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+from statsmodels.tsa.stattools import acf, adfuller
 
 matplotlib.use("TkAgg")
 
