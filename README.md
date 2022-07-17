@@ -13,6 +13,7 @@ More details: https://data.nasdaq.com/databases/ZILLOW/documentation
 - Visualize Housing Prices: We use Tableau to visualize house price changes over time and across the country.
 - Forecast future housing prices: We use several time-series approaches (... ) to analyze the existing data (including detrend and remove seasonality) and forecast house prices for the following year. 
 - Detect anomalous house prices (by region?): We use ___ anomaly detection approaches to identify housing prices that are distinctly different than the rest...
+The main goal is the visualization - forecasting and anomaly detection are more for practice...
 
 **Results**: 
 - From visualization, we saw as expected that the Northeast and California consistently had the highest median housing prices, while there were some spikes at different points in time in Colorado, Washington, Texas, and Florida. Also the visualization reminded me of the 2008 housing crisis, as we see some run-up of housing prices before 2008, but some drop-off after 2008. It seems like middle America was more negatively impacted than the coasts by the recession. 
