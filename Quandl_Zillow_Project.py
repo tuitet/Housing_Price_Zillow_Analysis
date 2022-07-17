@@ -48,8 +48,7 @@ file_dir = "C:/Users/timtu/PycharmProjects/web-scraping/"
 df_api_keys = pd.read_csv(file_dir + "api_keys.csv")
 # get keys
 quandl_api_key = df_api_keys.loc[df_api_keys["API"] == "quandl"]["KEY"].iloc[
-    0
-]  # get the Key column' value at the location where API = quandl
+    0]  # get the Key column' value at the location where API = quandl
 # enter your key here
 nasdaqdatalink.ApiConfig.api_key = quandl_api_key
 
@@ -60,7 +59,8 @@ zillow_data = pd.read_csv("ZILLOW_DATA_06262022.csv")
 # due to size of the data, just keep .1% for now
 zillow_data = zillow_data.sample(frac=0.001)
 # TODO change to larger dataset later instead of .1% subset
-zillow_indicators = nasdaqdatalink.get_table("ZILLOW/INDICATORS", paginate=True)
+zillow_indicators = nasdaqdatalink.get_table("ZILLOW/INDICATORS",
+                                             paginate=True)
 # store the region data in csv as backup, so we don't have to do API calls frequently on this.
 # If we later want to reload, uncomment the first and second lines, change the csv date on the 2nd line, comment out the third line
 # If we later want to redo this storage in csv, comment out the first and second lines, change the csv date on the 3rd line based on the updated filename, reload
@@ -87,9 +87,8 @@ zillow_data["indicator_id"].nunique()
 # %% Define functions for getting data from the region column:
 # find state in region column
 def check_state_in_str(search_str):
-    search_str_list = [
-        stg.strip() for stg in search_str.split(";")
-    ]  # split region column by semicolon, strip whitespace
+    search_str_list = [stg.strip() for stg in search_str.split(";")
+                       ]  # split region column by semicolon, strip whitespace
     for stg in search_str_list:  # for each string in that list
         if stg in states:  # if the string is in the list of states
             return stg  # store that state value
@@ -97,28 +96,26 @@ def check_state_in_str(search_str):
 
 # find county in region column
 def check_county_in_str(search_str):
-    search_str_list = [
-        stg.strip() for stg in search_str.split(";")
-    ]  # split region column by semicolon, strip whitespace
+    search_str_list = [stg.strip() for stg in search_str.split(";")
+                       ]  # split region column by semicolon, strip whitespace
     for stg in search_str_list:  # for each string in that list
-        if "county" in stg.lower():  # if the name "county" is in the lowercased string
+        if "county" in stg.lower(
+        ):  # if the name "county" is in the lowercased string
             return stg  # store that county value
 
 
 # find city in region column
-list_of_cities = pd.read_csv("us_cities_states_counties.csv")[
-    ["City", "City alias"]
-]  # load list of cities from github external source which was downloaded
+list_of_cities = pd.read_csv("us_cities_states_counties.csv")[[
+    "City", "City alias"
+]]  # load list of cities from github external source which was downloaded
 
 
 def check_city_in_str(search_str):
-    search_str_list = [
-        stg.strip() for stg in search_str.split(";")
-    ]  # split region column by semicolon, strip whitespace
+    search_str_list = [stg.strip() for stg in search_str.split(";")
+                       ]  # split region column by semicolon, strip whitespace
     for stg in search_str_list:  # for each string in the list
-        if (
-            stg in list_of_cities.values
-        ):  # if that string is a value in the list of cities df
+        if (stg in list_of_cities.values
+            ):  # if that string is a value in the list of cities df
             return stg  # return that string
 
 
@@ -139,16 +136,15 @@ metro_list = []  # initialize the list of metros
 # we see when inspecting the wiki page, each row in the table is tagged by 'tr'
 # The first row is a header, but loop through all remaining rows in this soup object
 # rang(0,384)
-for row in range(len(soup.find("table", class_="wikitable").find_all("tr")[1:])):
+for row in range(len(
+        soup.find("table", class_="wikitable").find_all("tr")[1:])):
     # This selector is found by going to the inspect page, right clicking on the html that highlights the metropolitan area table
     html_data = soup.select(
-        "#mw-content-text > div.mw-parser-output > table:nth-child(19) > tbody > tr:nth-child({})".format(
-            row + 2
-        )
+        "#mw-content-text > div.mw-parser-output > table:nth-child(19) > tbody > tr:nth-child({})"
+        .format(row + 2)
     )  # get the data for each row in the table, where we replace the nth-child with the specific items iteration (row+2 to bypass the header).
-    relevant_html_text = html_data[
-        0
-    ].getText()  # get the key text of the html, which includes the metro area in the 1st name of the string
+    relevant_html_text = html_data[0].getText(
+    )  # get the key text of the html, which includes the metro area in the 1st name of the string
     try:
         metro_list.append(
             re.search("^\\n\d+\\n\\n(.*?),", relevant_html_text).group(1)
@@ -161,7 +157,7 @@ for row in range(len(soup.find("table", class_="wikitable").find_all("tr")[1:]))
 
 # show the first and last few entries to make sure it worked
 metro_list[0:4]
-metro_list[len(metro_list) - 4 : len(metro_list)]
+metro_list[len(metro_list) - 4:len(metro_list)]
 
 # convert metro list to csv for storage
 # create 1 key dictionary to list all the metros
@@ -172,9 +168,8 @@ metro_list_df.to_csv("metro_list.csv", index=False)  # output the df to a csv
 
 # apply function to metro list to check if region's substring is a metro region
 def check_metro_in_str(search_str):
-    search_str_list = [
-        stg.strip() for stg in search_str.split(";")
-    ]  # split region column by semicolon, strip whitespace
+    search_str_list = [stg.strip() for stg in search_str.split(";")
+                       ]  # split region column by semicolon, strip whitespace
     for stg in search_str_list:  # for each string in that list
         if stg in metro_list:  # if the string is in the list of metros
             return stg  # store that metro value
@@ -264,25 +259,25 @@ zillow_regions_new.loc[:, "zip_code"] = zillow_regions_new.apply(
     lambda x: re.search("(\d{5})", x["region"]).group(), axis=1
 )  # find the 5 digit element in the region column, store it in a new column zip_code
 zillow_regions_new.loc[:, "state"] = zillow_regions_new.apply(
-    lambda x: check_state_in_str(x["region"]), axis=1
-)  # find state in the region column, store it in state column
+    lambda x: check_state_in_str(x["region"]),
+    axis=1)  # find state in the region column, store it in state column
 zillow_regions_new.loc[:, "county"] = zillow_regions_new.apply(
-    lambda x: check_county_in_str(x["region"]), axis=1
-)  # find county in the region column, store it in county column
+    lambda x: check_county_in_str(x["region"]),
+    axis=1)  # find county in the region column, store it in county column
 zillow_regions_new.loc[:, "city"] = zillow_regions_new.apply(
-    lambda x: check_city_in_str(x["region"]), axis=1
-)  # find city in the region column, store it in city column
+    lambda x: check_city_in_str(x["region"]),
+    axis=1)  # find city in the region column, store it in city column
 zillow_regions_new.loc[:, "metro"] = zillow_regions_new.apply(
-    lambda x: check_metro_in_str(x["region"]), axis=1
-)  # find metro in the regions column, store it in metro column
+    lambda x: check_metro_in_str(x["region"]),
+    axis=1)  # find metro in the regions column, store it in metro column
 
 # %% Merge and clean all 3 tables for future analysis
 
 # merge tables, using primary keys: https://data.nasdaq.com/databases/ZILLOW/documentation
 # use inner join for both because I only care where the e.g. data's region and region's region are both available, and e.g. the data's indicator and indicator's indicator are both available
-zillow_all = zillow_data.merge(zillow_regions_new, on="region_id").merge(
-    zillow_indicators, on="indicator_id"
-)
+zillow_all = zillow_data.merge(zillow_regions_new,
+                               on="region_id").merge(zillow_indicators,
+                                                     on="indicator_id")
 
 # remove certain columns to clean up and reduce size, sort by date:
 zillow_all = zillow_all.drop(columns=["region_type", "region_str_len"])
@@ -312,14 +307,13 @@ plt.rc("legend", fontsize=SMALL_SIZE)  # legend fontsize
 plt.rc("figure", titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 # plot the median price vs. date data
-zillow_all.value = pd.to_numeric(zillow_all["value"])  # convert value to numeric
-zillow_all.date = pd.to_datetime(
-    zillow_all["date"], format="%Y-%m-%d"
-)  # convert date to date
+zillow_all.value = pd.to_numeric(
+    zillow_all["value"])  # convert value to numeric
+zillow_all.date = pd.to_datetime(zillow_all["date"],
+                                 format="%Y-%m-%d")  # convert date to date
 zillow_all.region_id = zillow_all["region_id"].astype(str)
 zillow_price_by_date = zillow_all.groupby(["date"], as_index=False).median(
-    ["value"]
-)  # this is our time series data
+    ["value"])  # this is our time series data
 zillow_price_by_date.info()
 zillow_price_by_date.describe().T
 
@@ -384,7 +378,6 @@ axes[1].set(ylim=(0, 5))
 plot_acf(zillow_price_by_date.value.diff().dropna(), ax=axes[1])
 plt.show()
 
-
 # 1,1,0 ARIMA Model - seems from above analysis 1,1,0 was right
 ARIMA_model = ARIMA(zillow_price_by_date.value, order=(1, 1, 0))
 ARIMA_model_fit = ARIMA_model.fit()
@@ -425,7 +418,6 @@ plt.title("Forecast vs Actuals")
 plt.legend(loc="upper left", fontsize=8)
 plt.show()
 
-
 # use auto-arima to determine lowest AIC model
 
 auto_arima_model = pm.auto_arima(
@@ -456,10 +448,11 @@ plt.show()
 # Forecast
 n_periods = 24
 # make predictions for the next 24 periods
-fc, confint = auto_arima_model.predict(n_periods=n_periods, return_conf_int=True)
-index_of_fc = np.arange(
-    len(zillow_price_by_date.value), len(zillow_price_by_date.value) + n_periods
-)  # store index values of forecasted data
+fc, confint = auto_arima_model.predict(n_periods=n_periods,
+                                       return_conf_int=True)
+index_of_fc = np.arange(len(zillow_price_by_date.value),
+                        len(zillow_price_by_date.value) +
+                        n_periods)  # store index values of forecasted data
 
 # make series for plotting purpose
 # turn fc array into fc_series pandas series
@@ -470,7 +463,11 @@ upper_series = pd.Series(confint[:, 1], index=index_of_fc)
 # Plot
 plt.plot(zillow_price_by_date.value)
 plt.plot(fc_series, color="darkgreen")
-plt.fill_between(lower_series.index, lower_series, upper_series, color="k", alpha=0.15)
+plt.fill_between(lower_series.index,
+                 lower_series,
+                 upper_series,
+                 color="k",
+                 alpha=0.15)
 
 plt.title("Final Forecast of WWW Usage")
 plt.show()
@@ -479,8 +476,7 @@ plt.show()
 
 # Seasonal - fit stepwise auto-ARIMA
 zillow_price_by_date = zillow_price_by_date.set_index(
-    "date"
-)  # make the date an index for sarima to work
+    "date")  # make the date an index for sarima to work
 
 # Plot
 fig, axes = plt.subplots(2, 1, figsize=(10, 5), dpi=100, sharex=True)
@@ -493,9 +489,9 @@ axes[0].legend(loc="upper left", fontsize=10)
 
 # Seasinal Differencing
 axes[1].plot(zillow_price_by_date[:], label="Original Series")
-axes[1].plot(
-    zillow_price_by_date[:].diff(12), label="Seasonal Differencing", color="green"
-)
+axes[1].plot(zillow_price_by_date[:].diff(12),
+             label="Seasonal Differencing",
+             color="green")
 axes[1].set_title("Seasonal Differencing")
 plt.legend(loc="upper left", fontsize=10)
 plt.suptitle("House Prices", fontsize=16)
@@ -525,10 +521,11 @@ auto_sarima_model.summary()
 
 # Forecast next 24 months
 n_periods = 24
-fitted, confint = auto_sarima_model.predict(n_periods=n_periods, return_conf_int=True)
-index_of_fc = pd.date_range(
-    zillow_price_by_date.index[-1], periods=n_periods, freq="MS"
-)
+fitted, confint = auto_sarima_model.predict(n_periods=n_periods,
+                                            return_conf_int=True)
+index_of_fc = pd.date_range(zillow_price_by_date.index[-1],
+                            periods=n_periods,
+                            freq="MS")
 
 # make series for plotting purpose
 fitted_series = pd.Series(fitted, index=index_of_fc)
@@ -538,11 +535,14 @@ upper_series = pd.Series(confint[:, 1], index=index_of_fc)
 # Plot
 plt.plot(zillow_price_by_date)
 plt.plot(fitted_series, color="darkgreen")
-plt.fill_between(lower_series.index, lower_series, upper_series, color="k", alpha=0.15)
+plt.fill_between(lower_series.index,
+                 lower_series,
+                 upper_series,
+                 color="k",
+                 alpha=0.15)
 
 plt.title("SARIMA - Final Forecast of Housing Prices")
 plt.show()
-
 
 # use skforecast to forecast data...https://www.cienciadedatos.net/documentos/py27-time-series-forecasting-python-scikitlearn.html
 # Data manipulation
@@ -555,7 +555,6 @@ plt.rcParams["lines.linewidth"] = 1.5
 
 # Modeling and Forecasting
 # ==============================================================================
-
 
 # Warnings configuration
 # ==============================================================================
@@ -587,8 +586,7 @@ plt.show()
 # Create and train forecaster
 # ==============================================================================
 forecaster = ForecasterAutoreg(
-    regressor=RandomForestRegressor(random_state=123), lags=6
-)
+    regressor=RandomForestRegressor(random_state=123), lags=6)
 
 forecaster.fit(y=data_train["value"])
 forecaster
@@ -642,7 +640,6 @@ results_grid = grid_search_forecaster(
 
 results_grid
 
-
 # Predictions
 # ==============================================================================
 predictions = pd.DataFrame([forecaster.predict(steps=steps)[:steps]]).T
@@ -652,22 +649,17 @@ len(predictions) == len(data_test)
 predictions = predictions.set_index("date")
 predictions.head(5)
 
-
 # Test error
 # ==============================================================================
 error_mse = mean_squared_error(y_true=data_test["value"], y_pred=predictions)
 
 print(f"Test error (mse): {error_mse}")
 
-
 # split price data into train (pre-2020) and test (post-2020)
-train = zillow_price_by_date[
-    zillow_price_by_date.date < pd.to_datetime("2020-01-01", format="%Y-%m-%d")
-]
-test = zillow_price_by_date[
-    zillow_price_by_date.date >= pd.to_datetime("2020-01-01", format="%Y-%m-%d")
-]
-
+train = zillow_price_by_date[zillow_price_by_date.date < pd.to_datetime(
+    "2020-01-01", format="%Y-%m-%d")]
+test = zillow_price_by_date[zillow_price_by_date.date >= pd.to_datetime(
+    "2020-01-01", format="%Y-%m-%d")]
 
 # plot the train and test data...for some reason dates are numeric instead of dates...
 # TODO figure out why x-axis is numbers instead of dates --> was using index instead of date, had to convert the date to an index
@@ -694,9 +686,8 @@ y_pred = ARMAmodel.get_forecast(len(test.index))
 # generate a 95% confidence interval on the above predictions
 y_pred_df = y_pred.conf_int(alpha=0.05)
 # use ARMA model to predict the values at test index 288-316
-y_pred_df["Predictions"] = ARMAmodel.predict(
-    start=y_pred_df.index[0], end=y_pred_df.index[-1]
-)
+y_pred_df["Predictions"] = ARMAmodel.predict(start=y_pred_df.index[0],
+                                             end=y_pred_df.index[-1])
 y_pred_df.index = test.index  # set test index to y pred index...
 y_pred_out = y_pred_df["Predictions"]  # store the predictions
 # plot results
@@ -705,9 +696,9 @@ plt.legend()
 plt.show()
 
 # calculate RMSE
-arma_rmse = np.sqrt(mean_squared_error(test["value"].values, y_pred_df["Predictions"]))
+arma_rmse = np.sqrt(
+    mean_squared_error(test["value"].values, y_pred_df["Predictions"]))
 print("RMSE: ", arma_rmse)
-
 
 # %% ARIMA model
 # To define an ARIMA (lagging, differencing, white noise) model with the ARIMA class, we pass in the order parameters of (2, 2 ,2):
@@ -720,9 +711,8 @@ y_pred = ARIMAmodel.get_forecast(len(test.index))
 # generate a 95% confidence interval on the above predictions
 y_pred_df = y_pred.conf_int(alpha=0.05)
 # use ARMA model to predict the values at test index 288-316
-y_pred_df["Predictions"] = ARIMAmodel.predict(
-    start=y_pred_df.index[0], end=y_pred_df.index[-1]
-)
+y_pred_df["Predictions"] = ARIMAmodel.predict(start=y_pred_df.index[0],
+                                              end=y_pred_df.index[-1])
 y_pred_df.index = test.index  # set test index to y pred index...
 y_pred_out = y_pred_df["Predictions"]  # store the predictions
 # plot results
@@ -731,7 +721,8 @@ plt.legend()
 plt.show()
 
 # calculate RMSE
-arima_rmse = np.sqrt(mean_squared_error(test["value"].values, y_pred_df["Predictions"]))
+arima_rmse = np.sqrt(
+    mean_squared_error(test["value"].values, y_pred_df["Predictions"]))
 print("RMSE: ", arima_rmse)
 
 # %% SARIMA - Seasonal ARIMA
@@ -746,9 +737,8 @@ y_pred = SARIMAXmodel.get_forecast(len(test.index))
 # generate a 95% confidence interval on the above predictions
 y_pred_df = y_pred.conf_int(alpha=0.05)
 # use ARMA model to predict the values at test index 288-316
-y_pred_df["Predictions"] = SARIMAXmodel.predict(
-    start=y_pred_df.index[0], end=y_pred_df.index[-1]
-)
+y_pred_df["Predictions"] = SARIMAXmodel.predict(start=y_pred_df.index[0],
+                                                end=y_pred_df.index[-1])
 y_pred_df.index = test.index  # set test index to y pred index...
 y_pred_out = y_pred_df["Predictions"]  # store the predictions
 # plot results
@@ -758,6 +748,5 @@ plt.show()
 
 # calculate RMSE
 sarimax_rmse = np.sqrt(
-    mean_squared_error(test["value"].values, y_pred_df["Predictions"])
-)
+    mean_squared_error(test["value"].values, y_pred_df["Predictions"]))
 print("RMSE: ", sarimax_rmse)
