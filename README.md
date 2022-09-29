@@ -1,7 +1,5 @@
 # Housing Price Zillow Analysis
 
-test1...
-
 ## Summary
 **Goal**: The goal of this project is to analyze geographical and temporal trends of US housing prices since 1996. This includes visualizing housing data over time by region using Tableau, and performing forecasting and anomaly detection to analyze expected future prices and detect unusual house prices.
 
@@ -37,3 +35,10 @@ For example, the region table's region column was just a semicolon-separated lis
 - **Build anomaly-detection models to identify unusually-high house prices**: 
 - **Written Communication**: I wanted to practice my written communication skills, presenting technical data mining results to
 a non-technical audience.  
+
+## To-do
+- Update time series to use prophet
+- Perform anomaly detection
+- Update Tableau file with full dataset
+- Improve MLLib models (using all variables, trying different models)
+- Possibly filter by region or by single family homes or rentals
