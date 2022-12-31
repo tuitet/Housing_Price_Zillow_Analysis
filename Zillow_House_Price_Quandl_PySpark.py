@@ -47,8 +47,7 @@ from pyspark.sql.functions import isnull
 from pyspark.sql.functions import when
 from skforecast.ForecasterAutoreg import ForecasterAutoreg
 from skforecast.ForecasterAutoregCustom import ForecasterAutoregCustom
-from skforecast.ForecasterAutoregMultiOutput import \
-    ForecasterAutoregMultiOutput
+from skforecast.ForecasterAutoregMultiOutput import ForecasterAutoregMultiOutput
 from skforecast.model_selection import backtesting_forecaster
 from skforecast.model_selection import grid_search_forecaster
 from sklearn import metrics
@@ -57,8 +56,7 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import Lasso
 from sklearn.linear_model import LinearRegression
 from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import \
-    TimeSeriesSplit  # Splitting for time series CV!
+from sklearn.model_selection import TimeSeriesSplit  # Splitting for time series CV!
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 from statsmodels.graphics.tsaplots import plot_acf
@@ -69,6 +67,7 @@ from statsmodels.tsa.arima_model import ARIMA
 from statsmodels.tsa.statespace.sarimax import SARIMAX
 from statsmodels.tsa.stattools import acf
 from statsmodels.tsa.stattools import adfuller
+
 # import matplotlib
 # matplotlib.use('TkAgg')
 # import matplotlib.pyplot as plt
@@ -103,7 +102,8 @@ file_dir = "C:/Users/timtu/PycharmProjects/PySpark/"
 df_api_keys = pd.read_csv(file_dir + "api_keys.csv")
 # get quandl key
 quandl_api_key = df_api_keys.loc[df_api_keys["API"] == "quandl"]["KEY"].iloc[
-    0]  # get the Key column' value at the location where API = quandl
+    0
+]  # get the Key column' value at the location where API = quandl
 # enter key here
 nasdaqdatalink.ApiConfig.api_key = quandl_api_key
 
@@ -111,11 +111,9 @@ nasdaqdatalink.ApiConfig.api_key = quandl_api_key
 # load zillow data (api gets hit, and it only pulls the first 10k when it does work, this link gives full data: https://data.nasdaq.com/tables/ZILLOW-DATA/export?api_key=XCGFdeqrL4E3XB3gdkij)
 # zillow_data = nasdaqdatalink.get_table('ZILLOW/DATA', paginate=True)
 # Read data from CSV file
-zillow_data = spark.read.csv("ZILLOW_DATA_12312022.csv",
-                             sep=",",
-                             header=True,
-                             inferSchema=True,
-                             nullValue="NA")
+zillow_data = spark.read.csv(
+    "ZILLOW_DATA_12312022.csv", sep=",", header=True, inferSchema=True, nullValue="NA"
+)
 
 # check basics of the dataset
 zillow_data.show(2)
@@ -128,8 +126,7 @@ print("The data contain %d records." % zillow_data.count())  # 135,439,925 rows
 # zillow_data.count() #133387
 # TODO change to larger dataset later instead of .1% subset
 
-zillow_indicators = nasdaqdatalink.get_table("ZILLOW/INDICATORS",
-                                             paginate=True)
+zillow_indicators = nasdaqdatalink.get_table("ZILLOW/INDICATORS", paginate=True)
 zillow_indicators_pyspark = spark.createDataFrame(zillow_indicators)
 try:
     zillow_indicators_pyspark.show(1)
@@ -142,10 +139,9 @@ except:
 zillow_regions = nasdaqdatalink.get_table("ZILLOW/REGIONS", paginate=True)
 zillow_regions.to_csv("zillow_regions_12312022.csv", index=False)
 # load regions data from stored csv, mixture of comma and semicolon as separator so let it infer
-zillow_regions = spark.read.csv("zillow_regions_12312022.csv",
-                                header=True,
-                                inferSchema=True,
-                                nullValue="NA")
+zillow_regions = spark.read.csv(
+    "zillow_regions_12312022.csv", header=True, inferSchema=True, nullValue="NA"
+)
 # zillow_regions.show(2)
 
 # %% Explore Zillow data
@@ -165,17 +161,20 @@ zillow_data.select("indicator_id").distinct().show()
 # select mean value of all  single family homes (indicator_id like Z) by region
 zillow_indicators.columns
 zillow_indicators[["indicator_id", "indicator"]]
-spark.sql("SELECT indicator_id, MEAN(value) "
-          "FROM zillow_data_temp "
-          "WHERE indicator_id LIKE 'R%' "
-          "GROUP BY indicator_id LIMIT 5").show()
+spark.sql(
+    "SELECT indicator_id, MEAN(value) "
+    "FROM zillow_data_temp "
+    "WHERE indicator_id LIKE 'R%' "
+    "GROUP BY indicator_id LIMIT 5"
+).show()
 
 
 # %% Define functions for getting data from the region column:
 # find state in region column
 def check_state_in_str(search_str):
-    search_str_list = [stg.strip() for stg in search_str.split(";")
-                       ]  # split region column by semicolon, strip whitespace
+    search_str_list = [
+        stg.strip() for stg in search_str.split(";")
+    ]  # split region column by semicolon, strip whitespace
     for stg in search_str_list:  # for each string in that list
         if stg in states:  # if the string is in the list of states
             return stg  # store that state value
@@ -183,26 +182,28 @@ def check_state_in_str(search_str):
 
 # find county in region column
 def check_county_in_str(search_str):
-    search_str_list = [stg.strip() for stg in search_str.split(";")
-                       ]  # split region column by semicolon, strip whitespace
+    search_str_list = [
+        stg.strip() for stg in search_str.split(";")
+    ]  # split region column by semicolon, strip whitespace
     for stg in search_str_list:  # for each string in that list
-        if "county" in stg.lower(
-        ):  # if the name "county" is in the lowercased string
+        if "county" in stg.lower():  # if the name "county" is in the lowercased string
             return stg  # store that county value
 
 
 # find city in region column
-list_of_cities = pd.read_csv("us_cities_states_counties.csv")[[
-    "City", "City alias"
-]]  # load list of cities from github external source which was downloaded
+list_of_cities = pd.read_csv("us_cities_states_counties.csv")[
+    ["City", "City alias"]
+]  # load list of cities from github external source which was downloaded
 
 
 def check_city_in_str(search_str):
-    search_str_list = [stg.strip() for stg in search_str.split(";")
-                       ]  # split region column by semicolon, strip whitespace
+    search_str_list = [
+        stg.strip() for stg in search_str.split(";")
+    ]  # split region column by semicolon, strip whitespace
     for stg in search_str_list:  # for each string in the list
-        if (stg in list_of_cities.values
-            ):  # if that string is a value in the list of cities df
+        if (
+            stg in list_of_cities.values
+        ):  # if that string is a value in the list of cities df
             return stg  # return that string
 
 
@@ -223,16 +224,17 @@ metro_list = []  # initialize the list of metros
 # we see when inspecting the wiki page, each row in the table is tagged by 'tr'
 # The first row is a header, but loop through all remaining rows in this soup object
 # rang(0,384)
-for row in range(len(
-        soup.find("table", class_="wikitable").find_all("tr")[1:])):
+for row in range(len(soup.find("table", class_="wikitable").find_all("tr")[1:])):
     # This selector is found by going to the inspect page, right clicking on the html that highlights the metropolitan area table
     try:
         html_data = soup.select(
-            "#mw-content-text > div.mw-parser-output > table:nth-child(19) > tbody > tr:nth-child({})"
-            .format(row + 2)
+            "#mw-content-text > div.mw-parser-output > table:nth-child(19) > tbody > tr:nth-child({})".format(
+                row + 2
+            )
         )  # get the data for each row in the table, where we replace the nth-child with the specific items iteration (row+2 to bypass the header).
-        relevant_html_text = html_data[0].getText(
-        )  # get the key text of the html, which includes the metro area in the 1st name of the string...runs into list index out of range error, can't proceed
+        relevant_html_text = html_data[
+            0
+        ].getText()  # get the key text of the html, which includes the metro area in the 1st name of the string...runs into list index out of range error, can't proceed
         try:
             metro_list.append(
                 re.search("^\\n\d+\\n\\n(.*?),", relevant_html_text).group(1)
@@ -248,7 +250,7 @@ for row in range(len(
 
 # show the first and last few entries to make sure it worked
 metro_list[0:4]
-metro_list[len(metro_list) - 4:len(metro_list)]
+metro_list[len(metro_list) - 4 : len(metro_list)]
 
 # convert metro list to csv for storage
 # create 1 key dictionary to list all the metros
@@ -257,14 +259,16 @@ metro_list_df = pd.DataFrame(metro_dict)  # convert the dictionary to a df
 metro_list_df.to_csv("metro_list.csv", index=False)  # output the df to a csv
 
 metro_list_df_backup = pd.read_csv(
-    "metro_list_df_backup1.csv")  # read back in the metro names
+    "metro_list_df_backup1.csv"
+)  # read back in the metro names
 
 # apply function to metro list to check if region's substring is a metro region
 
 
 def check_metro_in_str(search_str):
-    search_str_list = [stg.strip() for stg in search_str.split(";")
-                       ]  # split region column by semicolon, strip whitespace
+    search_str_list = [
+        stg.strip() for stg in search_str.split(";")
+    ]  # split region column by semicolon, strip whitespace
     for stg in search_str_list:  # for each string in that list
         if stg in metro_list_df_backup:  # if the string is in the list of metros
             return stg  # store that metro value
@@ -281,7 +285,8 @@ zillow_regions_distinct.show()
 # keep only the regions which go down to the zip level, which is the most frequent
 zillow_regions.createOrReplaceTempView("zillow_regions_temp")
 zillow_regions_new = spark.sql(
-    "SELECT * FROM zillow_regions_temp WHERE region_type = 'zip'")
+    "SELECT * FROM zillow_regions_temp WHERE region_type = 'zip'"
+)
 # zillow_regions_new.show(1)
 zillow_regions_new.count()  # 31204
 
@@ -378,56 +383,56 @@ zillow_regions_new_pandas.loc[:, "zip_code"] = zillow_regions_new_pandas.apply(
 )  # find the 5 digit element in the region column, store it in a new column zip_code
 
 zillow_regions_new_pandas.loc[:, "state"] = zillow_regions_new_pandas.apply(
-    lambda x: check_state_in_str(x["region"]),
-    axis=1)  # find state in the region column, store it in state column
+    lambda x: check_state_in_str(x["region"]), axis=1
+)  # find state in the region column, store it in state column
 
 zillow_regions_new_pandas.loc[:, "county"] = zillow_regions_new_pandas.apply(
-    lambda x: check_county_in_str(x["region"]),
-    axis=1)  # find county in the region column, store it in county column
+    lambda x: check_county_in_str(x["region"]), axis=1
+)  # find county in the region column, store it in county column
 
 # get city down below using zip --> city calculation?
 zillow_regions_new_pandas.loc[:, "city"] = zillow_regions_new_pandas.apply(
-    lambda x: check_city_in_str(x["region"]),
-    axis=1)  # find city in the region column, store it in city column
+    lambda x: check_city_in_str(x["region"]), axis=1
+)  # find city in the region column, store it in city column
 
 zillow_regions_new_pandas.loc[:, "metro"] = zillow_regions_new_pandas.apply(
-    lambda x: check_metro_in_str(x["region"]),
-    axis=1)  # find metro in the regions column, store it in metro column
+    lambda x: check_metro_in_str(x["region"]), axis=1
+)  # find metro in the regions column, store it in metro column
 
 # convert cleaned regions pandas dataframe back to a pyspark dataframe
-zillow_regions_new_pandas_to_pyspark = spark.createDataFrame(
-    zillow_regions_new_pandas)
+zillow_regions_new_pandas_to_pyspark = spark.createDataFrame(zillow_regions_new_pandas)
 zillow_regions_new_pandas_to_pyspark.show(1)
 
 # %% Update state, city, county where it's blank using zip code
 # Where state or city or county is blank, add it in using the uszips.csv table from https://simplemaps.com/data/us-zips
 # count how many rows where state is blank
 zillow_regions_new_pandas_to_pyspark.createOrReplaceTempView(
-    "zillow_regions_new_pandas_to_pyspark_temp")
+    "zillow_regions_new_pandas_to_pyspark_temp"
+)
 # 2166 states are null
 spark.sql(
     "SELECT count(*) FROM zillow_regions_new_pandas_to_pyspark_temp WHERE state IS NULL"
 ).show()
 zillow_regions_new_pandas_to_pyspark.filter(
-    "city IS NULL").count()  # 3867 rows where city is null
+    "city IS NULL"
+).count()  # 3867 rows where city is null
 
 # read in the zip to state file
-zip_to_state = spark.read.csv("uszips.csv", header=True,
-                              inferSchema=True).withColumnRenamed(
-                                  "city", "city2")
+zip_to_state = spark.read.csv(
+    "uszips.csv", header=True, inferSchema=True
+).withColumnRenamed("city", "city2")
 
 # read in the zip to metro file - https://planiverse.wordpress.com/2019/01/18/mapping-zip-codes-to-msas-and-cbsas/
-zip_to_metro = (spark.read.csv("zip_to_metro.csv",
-                               header=True,
-                               inferSchema=True).withColumnRenamed(
-                                   "ZIP", "ZIP_metro").withColumnRenamed(
-                                       "Metro", "Metro_metro"))
+zip_to_metro = (
+    spark.read.csv("zip_to_metro.csv", header=True, inferSchema=True)
+    .withColumnRenamed("ZIP", "ZIP_metro")
+    .withColumnRenamed("Metro", "Metro_metro")
+)
 
 # replace "[not in a CBSA]" value with null
 zip_to_metro = zip_to_metro.withColumn(
     "Metro_metro",
-    when(col("Metro_metro") == "[not in a CBSA]",
-         None).otherwise(col("Metro_metro")),
+    when(col("Metro_metro") == "[not in a CBSA]", None).otherwise(col("Metro_metro")),
 )
 
 # join old table and new table, connecting by zip code where we choose left join because the values in zillow_regions_new_pandas_to_pyspark need to remain, regardless if zip is found in zip_to_state
@@ -446,7 +451,8 @@ zillow_regions_new_pandas_to_pyspark = zillow_regions_new_pandas_to_pyspark.join
 
 # count how many times state and state_id are null, different, prechecks
 zillow_regions_new_pandas_to_pyspark.createOrReplaceTempView(
-    "zillow_regions_new_pandas_to_pyspark_temp")
+    "zillow_regions_new_pandas_to_pyspark_temp"
+)
 # 35451 rows
 spark.sql(
     "SELECT count(*) FROM zillow_regions_new_pandas_to_pyspark_temp WHERE state == state_id"
@@ -471,11 +477,9 @@ zillow_regions_new_pandas_to_pyspark.filter("city IS NULL").count()  # 3867
 zillow_regions_new_pandas_to_pyspark.filter("city2 IS NULL").count()  # 425
 
 # count how many times county and county_name are null, different, prechecks
-zillow_regions_new_pandas_to_pyspark.filter(
-    "county <> county_name").count()  # 27995
+zillow_regions_new_pandas_to_pyspark.filter("county <> county_name").count()  # 27995
 zillow_regions_new_pandas_to_pyspark.filter("county IS NULL").count()  # 2984
-zillow_regions_new_pandas_to_pyspark.filter(
-    "county_name IS NULL").count()  # 425
+zillow_regions_new_pandas_to_pyspark.filter("county_name IS NULL").count()  # 425
 
 # replace null state with state_id value, null city with city2 value, null county with county_name value, null metro values with Metro_metro
 zillow_regions_new_pandas_to_pyspark = zillow_regions_new_pandas_to_pyspark.withColumn(
@@ -509,7 +513,8 @@ zillow_regions_new_pandas_to_pyspark = zillow_regions_new_pandas_to_pyspark.with
 
 # count how many times state and state_id are null, different, postchecks. Now state column is 100% populated.
 zillow_regions_new_pandas_to_pyspark.createOrReplaceTempView(
-    "zillow_regions_new_pandas_to_pyspark_temp")
+    "zillow_regions_new_pandas_to_pyspark_temp"
+)
 # 30712 rows
 spark.sql(
     "SELECT count(*) FROM zillow_regions_new_pandas_to_pyspark_temp WHERE state == state_id"
@@ -529,16 +534,13 @@ zillow_regions_new_pandas_to_pyspark.filter("city <> city2").count()  # 6505
 zillow_regions_new_pandas_to_pyspark.filter("city IS NULL").count()  # 41
 
 # count how many times county and county_name are null, different, postchecks
-zillow_regions_new_pandas_to_pyspark.filter(
-    "county <> county_name").count()  # 34k
+zillow_regions_new_pandas_to_pyspark.filter("county <> county_name").count()  # 34k
 zillow_regions_new_pandas_to_pyspark.filter("county IS NULL").count()  # 5
 
 # count how many times metro and Metro_metro are null, different, postchecks
-zillow_regions_new_pandas_to_pyspark.filter(
-    "metro <> Metro_metro").count()  # 0
+zillow_regions_new_pandas_to_pyspark.filter("metro <> Metro_metro").count()  # 0
 zillow_regions_new_pandas_to_pyspark.filter("metro IS NULL").count()  # 11682
-zillow_regions_new_pandas_to_pyspark.filter(
-    "Metro_metro IS NOT NULL").count()  # 26485
+zillow_regions_new_pandas_to_pyspark.filter("Metro_metro IS NOT NULL").count()  # 26485
 
 # remove the unnecessary, duplicate columns
 zillow_regions_new_pandas_to_pyspark_condensed = (
@@ -564,7 +566,8 @@ zillow_regions_new_pandas_to_pyspark_condensed = (
         "timezone",
         "ZIP_metro",
         "Metro_metro",
-    ))
+    )
+)
 
 # ps.reset_option('compute.ops_on_diff_frames')
 
@@ -577,8 +580,9 @@ zillow_regions_new_pandas_to_pyspark_condensed = (
 # merge tables, using primary keys: https://data.nasdaq.com/databases/ZILLOW/documentation
 # use inner join for both because I only care where the e.g. data's region and region's region are both available, and e.g. the data's indicator and indicator's indicator are both available
 # split into 2 separate joins, since doing all 3 at once leading to the above python was not found error
-zillow_temp = zillow_data.join(zillow_regions_new_pandas_to_pyspark_condensed,
-                               ["region_id"])
+zillow_temp = zillow_data.join(
+    zillow_regions_new_pandas_to_pyspark_condensed, ["region_id"]
+)
 # zillow_temp.show(1)
 
 try:
@@ -606,8 +610,7 @@ zillow_all_rental = zillow_all_rental.sort("date", ascending=True)
 
 # ps.reset_option('compute.ops_on_diff_frames')
 # reduce size of zillow_all and zillow_house so that it can be written to csv
-zillow_all_rental.count(
-)  # 621601 see count of rental, which corresponds to 112 MB csv
+zillow_all_rental.count()  # 621601 see count of rental, which corresponds to 112 MB csv
 zillow_rental = zillow_all_rental
 
 zillow_all.count()  # 58576520
@@ -621,8 +624,7 @@ zillow_house = zillow_all_house.sample(fraction=0.01)
 # sometimes running all 3 to_csv's leads to terminations - prioritize house and rental
 # zillow_both.toPandas().to_csv('zillow_both_backup_10212022.csv', index=False)
 # zillow_house.toPandas().to_csv('zillow_house_backup_12312022.csv', index=False)
-zillow_rental.toPandas().to_csv("zillow_rental_backup_12312022.csv",
-                                index=False)
+zillow_rental.toPandas().to_csv("zillow_rental_backup_12312022.csv", index=False)
 # zillow_all_rental.coalesce(1).write.csv('C:\Users\timtu\PycharmProjects\PySpark\zillow_all_backup.csv')
 
 raise KeyboardInterrupt
@@ -643,32 +645,31 @@ warnings.filterwarnings("ignore")  # ignores warnings
 # Create SparkSession object using all available cores on this local computer
 spark = SparkSession.builder.master("local[*]").appName("test").getOrCreate()
 
-zillow_all_rental = spark.read.csv("zillow_rental_backup_12312022.csv",
-                                   header=True,
-                                   inferSchema=True,
-                                   nullValue="NA")
+zillow_all_rental = spark.read.csv(
+    "zillow_rental_backup_12312022.csv", header=True, inferSchema=True, nullValue="NA"
+)
 
 # %% Data cleanup, Preparation, Train/test split
 # do some prechecks on missing data to allow later ml functionality to work
-zillow_all_rental.select([
-    count(when(isnull(c), c)).alias(c) for c in zillow_all_rental.columns
-]).show()  # count null values for all columns
+zillow_all_rental.select(
+    [count(when(isnull(c), c)).alias(c) for c in zillow_all_rental.columns]
+).show()  # count null values for all columns
 # too long...zillow_all_rental.select([count(when(isnull(c), c)).alias(c)/zillow_all_rental.count() for c in zillow_all_rental.columns]).show() #count % values for all columns
 
 # drop rows with null values in state, density, value, metro as these are going to be used later. It's ok that metro has high number of nulls, don't want to delete those rows
 zillow_all_drop_nulls = zillow_all_rental.na.drop(
-    subset=["state", "density", "value"]).drop("metro")
+    subset=["state", "density", "value"]
+).drop("metro")
 zillow_all_drop_nulls.show(5)
 
 # recount after dropping nulls
-zillow_all_drop_nulls.select([
-    count(when(isnull(c), c)).alias(c) for c in zillow_all_drop_nulls.columns
-]).show()  # count null values for all columns
+zillow_all_drop_nulls.select(
+    [count(when(isnull(c), c)).alias(c) for c in zillow_all_drop_nulls.columns]
+).show()  # count null values for all columns
 zillow_all_drop_nulls.show(5)
 
 # Split into training and testing sets in a 80:20 ratio
-zillow_train, zillow_test = zillow_all_drop_nulls.randomSplit([0.8, 0.2],
-                                                              seed=17)
+zillow_train, zillow_test = zillow_all_drop_nulls.randomSplit([0.8, 0.2], seed=17)
 
 zillow_train.show(1)
 
@@ -684,15 +685,14 @@ zillow_train.show(1)
 stages_lr = []
 
 # define the transformation stages for the categorical columns...metro has too many nulls so leave out
-categoricalColumns = [
-    "indicator_id", "zip_code", "state", "county", "city", "category"
-]
+categoricalColumns = ["indicator_id", "zip_code", "state", "county", "city", "category"]
 for categoricalCol in categoricalColumns:
     # category indexing with string indexer
-    stringIndexer = StringIndexer(inputCol=categoricalCol,
-                                  outputCol=categoricalCol +
-                                  "Index").setHandleInvalid(
-                                      "keep")  # keep is for unknown categories
+    stringIndexer = StringIndexer(
+        inputCol=categoricalCol, outputCol=categoricalCol + "Index"
+    ).setHandleInvalid(
+        "keep"
+    )  # keep is for unknown categories
     # Use onehotencoder to convert cat variables into binary sparseVectors
     encoder = OneHotEncoder(
         inputCols=[stringIndexer.getOutputCol()],
@@ -704,23 +704,25 @@ for categoricalCol in categoricalColumns:
 # define impute stage for the numerical columns
 numericalColumns = ["population", "density"]
 numericalColumnsImputed = [x + "_imputed" for x in numericalColumns]
-imputer = Imputer(inputCols=numericalColumns,
-                  outputCols=numericalColumnsImputed)
+imputer = Imputer(inputCols=numericalColumns, outputCols=numericalColumnsImputed)
 stages_lr += [imputer]
 
 # define numerical assembler first for scaling
-numericalAssembler = VectorAssembler(inputCols=numericalColumnsImputed,
-                                     outputCol="numerical_cols_imputed")
+numericalAssembler = VectorAssembler(
+    inputCols=numericalColumnsImputed, outputCol="numerical_cols_imputed"
+)
 stages_lr += [numericalAssembler]
 
 # define the standard scaler stage for the numerical columns
-scaler = StandardScaler(inputCol="numerical_cols_imputed",
-                        outputCol="numerical_cols_imputed_scaled")
+scaler = StandardScaler(
+    inputCol="numerical_cols_imputed", outputCol="numerical_cols_imputed_scaled"
+)
 stages_lr += [scaler]  # already a list so no need for brackets
 
 # Perform assembly stage to bring together features
-assemblerInputs = [c + "classVec" for c in categoricalColumns
-                   ] + ["numerical_cols_imputed_scaled"]
+assemblerInputs = [c + "classVec" for c in categoricalColumns] + [
+    "numerical_cols_imputed_scaled"
+]
 # features contains everything, one hot encoded and numerical
 assembler = VectorAssembler(inputCols=assemblerInputs, outputCol="features")
 stages_lr += [assembler]
@@ -744,15 +746,14 @@ print("RMSE =", evaluator_mleip_linreg.evaluate(linreg_Pipeline_predictions))
 stages_rf = []
 
 # define the transformation stages for the categorical columns
-categoricalColumns = [
-    "indicator_id", "zip_code", "state", "county", "city", "category"
-]
+categoricalColumns = ["indicator_id", "zip_code", "state", "county", "city", "category"]
 for categoricalCol in categoricalColumns:
     # category indexing with string indexer
-    stringIndexer = StringIndexer(inputCol=categoricalCol,
-                                  outputCol=categoricalCol +
-                                  "Index").setHandleInvalid(
-                                      "keep")  # keep is for unknown categories
+    stringIndexer = StringIndexer(
+        inputCol=categoricalCol, outputCol=categoricalCol + "Index"
+    ).setHandleInvalid(
+        "keep"
+    )  # keep is for unknown categories
     # Use onehotencoder to convert cat variables into binary sparseVectors
     encoder = OneHotEncoder(
         inputCols=[stringIndexer.getOutputCol()],
@@ -795,14 +796,12 @@ encoder = OneHotEncoder(inputCols=["stateIndex"], outputCols=["stateOHE"])
 
 print("Vectorizing...")
 # Create an assembler object, create vector of features, for now follow Datacamp idea and use these 2 columns
-assembler = VectorAssembler(inputCols=["stateOHE", "density"],
-                            outputCol="features")
+assembler = VectorAssembler(inputCols=["stateOHE", "density"], outputCol="features")
 regression_model = LinearRegression(labelCol="value")
 # elnet_model = LinearRegression(labelCol='value', regParam=.5, elasticNetParam=.5)
 # rf_model = RandomForestRegressor(labelCol='value', maxBins=52)
 print("Pipeline...")
-pipeline_regression = Pipeline(
-    stages=[indexer, encoder, assembler, regression_model])
+pipeline_regression = Pipeline(stages=[indexer, encoder, assembler, regression_model])
 
 # fit the pipeline on the training data, seemingly can only train 1 model at a time, otherwise column prediction already exists error
 print("Fit...")
@@ -810,21 +809,19 @@ pipelineModel_regression = pipeline_regression.fit(zillow_train)
 
 # make predictions on train data
 print("Transform Train Data...")
-predictionModel_regression_train = pipelineModel_regression.transform(
-    zillow_train)
+predictionModel_regression_train = pipelineModel_regression.transform(zillow_train)
 
 # show some of the linreg predictions and other key values
-predictionModel_regression_train.select("stateOHE", "features", "value",
-                                        "prediction").show(5)
+predictionModel_regression_train.select(
+    "stateOHE", "features", "value", "prediction"
+).show(5)
 
 # make predictions on test data
 print("Transform Test Data...")
-predictionModel_regression_test = pipelineModel_regression.transform(
-    zillow_test)
+predictionModel_regression_test = pipelineModel_regression.transform(zillow_test)
 
 # show some of the linreg test predictions and other key values
-predictionModel_regression_test.select("stateOHE", "features",
-                                       "prediction").show(5)
+predictionModel_regression_test.select("stateOHE", "features", "prediction").show(5)
 
 # define the evaluator_regression
 evaluator_regression = RegressionEvaluator(labelCol="value")
@@ -832,11 +829,13 @@ evaluator_regression = RegressionEvaluator(labelCol="value")
 # %% Run Train/Validation split
 
 # Create parameter grid
-paramGrid = (ParamGridBuilder().addGrid(
-    regression_model.regParam, [0.01, 0.1, 1.0, 10.0]).addGrid(
-        regression_model.fitIntercept,
-        [False, True]).addGrid(regression_model.elasticNetParam,
-                               [0.0, 0.5, 1.0]).build())
+paramGrid = (
+    ParamGridBuilder()
+    .addGrid(regression_model.regParam, [0.01, 0.1, 1.0, 10.0])
+    .addGrid(regression_model.fitIntercept, [False, True])
+    .addGrid(regression_model.elasticNetParam, [0.0, 0.5, 1.0])
+    .build()
+)
 print("Number of models to be tested: ", len(paramGrid))
 
 # create train/validation split
@@ -874,9 +873,9 @@ print("RMSE =", evaluator_regression.evaluate(tvs_predictions))
 params = ParamGridBuilder()
 
 # Add grids for two parameters
-params = params.addGrid(regression_model.regParam,
-                        [0.01, 0.1, 1.0, 10.0]).addGrid(
-                            regression_model.elasticNetParam, [0.0, 0.5, 1.0])
+params = params.addGrid(regression_model.regParam, [0.01, 0.1, 1.0, 10.0]).addGrid(
+    regression_model.elasticNetParam, [0.0, 0.5, 1.0]
+)
 
 # Build the parameter grid
 params = params.build()
@@ -913,8 +912,7 @@ print("RMSE =", evaluator_regression.evaluate(cv_predictions))
 # String Indexer
 indexer = StringIndexer(inputCol="state", outputCol="stateIndex")
 # identifies categories in the data, then create a new column with numeric index values
-zillow_indexed = indexer.fit(zillow_all_drop_nulls).transform(
-    zillow_all_drop_nulls)
+zillow_indexed = indexer.fit(zillow_all_drop_nulls).transform(zillow_all_drop_nulls)
 # zillow_indexed.show()
 
 # One-hot encoding
@@ -924,8 +922,7 @@ encoder = OneHotEncoder(inputCols=["stateIndex"], outputCols=["stateDummy"])
 model = encoder.fit(zillow_indexed)
 # Apply the one hot encoder to the zillow data
 zillow_encoded = model.transform(zillow_indexed)
-zillow_encoded.select("state", "stateIndex",
-                      "stateDummy").sort("stateIndex").show(5)
+zillow_encoded.select("state", "stateIndex", "stateDummy").sort("stateIndex").show(5)
 
 # scale the density, robustscaler to be robust against outliers, has issues with illegal argument exception, try later..maybe due to null values?
 # https://stackoverflow.com/questions/61056160/illegalargumentexception-column-must-be-of-type-structtypetinyint-sizeint-in
@@ -933,9 +930,9 @@ zillow_encoded.select("state", "stateIndex",
 try:
     zillow_encoded.dtypes  # density is currently double, have to make it int
     zillow_encoded = zillow_encoded.withColumn(
-        "density", zillow_encoded.density.cast("int"))
-    zillow_encoded.printSchema(
-    )  # density is currently double, have to make it int
+        "density", zillow_encoded.density.cast("int")
+    )
+    zillow_encoded.printSchema()  # density is currently double, have to make it int
 
     from pyspark.ml.feature import RobustScaler
 
@@ -955,17 +952,16 @@ except Exception:
 # assemble feature vector
 zillow_encoded.show(1)
 # Create an assembler object, create vector of features, for now follow Datacamp idea and use these 2 columns
-assembler = VectorAssembler(inputCols=["stateIndex", "density"],
-                            outputCol="features")
-zillow_assembled = assembler.transform(
-    zillow_encoded)  # Consolidate predictor columns
+assembler = VectorAssembler(inputCols=["stateIndex", "density"], outputCol="features")
+zillow_assembled = assembler.transform(zillow_encoded)  # Consolidate predictor columns
 zillow_assembled.select("stateIndex", "density", "value", "features").show(3)
 zillow_assembled.count()
 
 # %% ## Prepare data for ml
 # reduce the data to just the columns we'll use for prediction
-zillow_condensed = zillow_assembled.select("state", "stateIndex", "density",
-                                           "value", "features")
+zillow_condensed = zillow_assembled.select(
+    "state", "stateIndex", "density", "value", "features"
+)
 
 # Split into training and testing sets in a 80:20 ratio
 zillow_train, zillow_test = zillow_condensed.randomSplit([0.8, 0.2], seed=17)
@@ -977,8 +973,7 @@ print(training_ratio)
 # %% Linear Regression
 
 # Create a regression object and train on training data
-regression_model = LinearRegression(labelCol="value",
-                                    regParam=0.3).fit(zillow_train)
+regression_model = LinearRegression(labelCol="value", regParam=0.3).fit(zillow_train)
 
 # Summarize the model over the training set and print out some metrics
 trainingSummary = regression_model.summary
@@ -992,20 +987,20 @@ print("r2: %f" % trainingSummary.r2)
 linreg_predictions = regression.transform(zillow_test)
 
 # Calculate the RMSE on testing data
-linreg_rmse = RegressionEvaluator(
-    labelCol="value").evaluate(linreg_predictions)
+linreg_rmse = RegressionEvaluator(labelCol="value").evaluate(linreg_predictions)
 print("The linear regression test RMSE is", linreg_rmse)
 
 # %% Regularization - Elastic Net
 
 # Fit Lasso model (λ = .5, α = .5) to training data
-elnet_regression = LinearRegression(labelCol="value",
-                                    regParam=0.5,
-                                    elasticNetParam=0.5).fit(zillow_train)
+elnet_regression = LinearRegression(
+    labelCol="value", regParam=0.5, elasticNetParam=0.5
+).fit(zillow_train)
 
 # Calculate the RMSE on testing data
 elnet_rmse = RegressionEvaluator(labelCol="value").evaluate(
-    elnet_regression.transform(zillow_test))
+    elnet_regression.transform(zillow_test)
+)
 print("The elastic net test RMSE is", elnet_rmse)
 
 # Look at the model coefficients
@@ -1015,8 +1010,7 @@ print(elnet_coeffs)
 # %% Random Forest Regression
 
 # Train a RandomForest model.
-rf_model = RandomForestRegressor(labelCol="value",
-                                 maxBins=52).fit(zillow_train)
+rf_model = RandomForestRegressor(labelCol="value", maxBins=52).fit(zillow_train)
 
 # Make predictions on test data.
 rf_predictions = rf_model.transform(zillow_test)
@@ -1058,16 +1052,13 @@ indexer = StringIndexer(inputCol="state", outputCol="stateIndex")
 # Create an instance of the one hot encoder
 encoder = OneHotEncoder(inputCols=["stateIndex"], outputCols=["stateDummy"])
 # Create an assembler object, create vector of features, for now follow Datacamp idea and use these 2 columns
-assembler = VectorAssembler(inputCols=["stateIndex", "density"],
-                            outputCol="features")
+assembler = VectorAssembler(inputCols=["stateIndex", "density"], outputCol="features")
 regression_model = LinearRegression(labelCol="value", regParam=0.3)
-elnet_regression = LinearRegression(labelCol="value",
-                                    regParam=0.5,
-                                    elasticNetParam=0.5)
+elnet_regression = LinearRegression(labelCol="value", regParam=0.5, elasticNetParam=0.5)
 rf_model = RandomForestRegressor(labelCol="value", maxBins=52)
-pipeline = Pipeline(stages=[
-    indexer, encoder, assembler, regression_model, elnet_regression, rf_model
-])
+pipeline = Pipeline(
+    stages=[indexer, encoder, assembler, regression_model, elnet_regression, rf_model]
+)
 
 # fit the pipeline on the training data
 model = pipeline.fit(zillow_train)
@@ -1120,8 +1111,7 @@ def cluster_and_label(X, create_and_show_plot=True):
     #      % metrics.adjusted_rand_score(labels_true, labels))
     # print("Adjusted Mutual Information: %0.3f"
     #      % metrics.adjusted_mutual_info_score(labels_true, labels))
-    print("Silhouette Coefficient: %0.3f" %
-          metrics.silhouette_score(X, labels))
+    print("Silhouette Coefficient: %0.3f" % metrics.silhouette_score(X, labels))
 
     run_metadata = {
         "nClusters": n_clusters_,
@@ -1133,9 +1123,7 @@ def cluster_and_label(X, create_and_show_plot=True):
         fig = plt.figure(figsize=(10, 10))
         # Black removed and is used for noise instead.
         unique_labels = set(labels)
-        colors = [
-            plt.cm.cool(each) for each in np.linspace(0, 1, len(unique_labels))
-        ]
+        colors = [plt.cm.cool(each) for each in np.linspace(0, 1, len(unique_labels))]
         for k, col in zip(unique_labels, colors):
             if k == -1:
                 # Black used for noise.
@@ -1182,9 +1170,8 @@ plt.rcParams.update({"font.size": 22})
 
 # create date field to Date format
 zillow_all_drop_nulls_date = zillow_all_drop_nulls.select(
-    "*",
-    to_date(col("date"), "YYYY-MM-DD").alias(
-        "DateOfSale"))  # .toPandas().astype  #plot(x='date', y = 'value')
+    "*", to_date(col("date"), "YYYY-MM-DD").alias("DateOfSale")
+)  # .toPandas().astype  #plot(x='date', y = 'value')
 
 # doesn't work yet... https://spark.apache.org/docs/3.2.1/api/python/reference/pyspark.pandas/api/pyspark.pandas.DataFrame.plot.line.html
 zillow_all_drop_nulls_date.plot.line(x="DateOfSale", y="value")
@@ -1225,7 +1212,7 @@ def time_split_train_test(df, time_series_splits, seasonality=seasonality):
         df_sub = df_train.append(df_pred).reset_index(drop=True)
         df_sub["split"] = i
         # calculating rmse for the split
-        df_sub["rmse"] = (np.mean((df_sub.yhat - df_sub.y)**2))**0.5
+        df_sub["rmse"] = (np.mean((df_sub.yhat - df_sub.y) ** 2)) ** 0.5
 
         df_results = df_results.append(df_sub).reset_index(drop=True)
     return df_results
@@ -1262,12 +1249,15 @@ plt.rc("figure", titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
 # plot the median price vs. date data
 zillow_all_rental.value = pd.to_numeric(
-    zillow_all_rental["value"])  # convert value to numeric
+    zillow_all_rental["value"]
+)  # convert value to numeric
 zillow_all_rental.date = pd.to_datetime(
-    zillow_all_rental["date"], format="%Y-%m-%d")  # convert date to date
+    zillow_all_rental["date"], format="%Y-%m-%d"
+)  # convert date to date
 zillow_all_rental.region_id = zillow_all_rental["region_id"].astype(str)
-zillow_price_by_date = zillow_all_rental.groupby(
-    ["date"], as_index=False).median(["value"])  # this is our time series data
+zillow_price_by_date = zillow_all_rental.groupby(["date"], as_index=False).median(
+    ["value"]
+)  # this is our time series data
 zillow_price_by_date.info()
 zillow_price_by_date.describe().T
 
@@ -1402,11 +1392,10 @@ plt.show()
 # Forecast
 n_periods = 24
 # make predictions for the next 24 periods
-fc, confint = auto_arima_model.predict(n_periods=n_periods,
-                                       return_conf_int=True)
-index_of_fc = np.arange(len(zillow_price_by_date.value),
-                        len(zillow_price_by_date.value) +
-                        n_periods)  # store index values of forecasted data
+fc, confint = auto_arima_model.predict(n_periods=n_periods, return_conf_int=True)
+index_of_fc = np.arange(
+    len(zillow_price_by_date.value), len(zillow_price_by_date.value) + n_periods
+)  # store index values of forecasted data
 
 # make series for plotting purpose
 # turn fc array into fc_series pandas series
@@ -1417,11 +1406,7 @@ upper_series = pd.Series(confint[:, 1], index=index_of_fc)
 # Plot
 plt.plot(zillow_price_by_date.value)
 plt.plot(fc_series, color="darkgreen")
-plt.fill_between(lower_series.index,
-                 lower_series,
-                 upper_series,
-                 color="k",
-                 alpha=0.15)
+plt.fill_between(lower_series.index, lower_series, upper_series, color="k", alpha=0.15)
 
 plt.title("Final Forecast of WWW Usage")
 plt.show()
@@ -1430,7 +1415,8 @@ plt.show()
 
 # Seasonal - fit stepwise auto-ARIMA
 zillow_price_by_date = zillow_price_by_date.set_index(
-    "date")  # make the date an index for sarima to work
+    "date"
+)  # make the date an index for sarima to work
 
 # Plot
 fig, axes = plt.subplots(2, 1, figsize=(10, 5), dpi=100, sharex=True)
@@ -1443,9 +1429,9 @@ axes[0].legend(loc="upper left", fontsize=10)
 
 # Seasonal Differencing
 axes[1].plot(zillow_price_by_date[:], label="Original Series")
-axes[1].plot(zillow_price_by_date[:].diff(12),
-             label="Seasonal Differencing",
-             color="green")
+axes[1].plot(
+    zillow_price_by_date[:].diff(12), label="Seasonal Differencing", color="green"
+)
 axes[1].set_title("Seasonal Differencing")
 plt.legend(loc="upper left", fontsize=10)
 plt.suptitle("House Prices", fontsize=16)
@@ -1475,11 +1461,10 @@ auto_sarima_model.summary()
 
 # Forecast next 24 months
 n_periods = 24
-fitted, confint = auto_sarima_model.predict(n_periods=n_periods,
-                                            return_conf_int=True)
-index_of_fc = pd.date_range(zillow_price_by_date.index[-1],
-                            periods=n_periods,
-                            freq="MS")
+fitted, confint = auto_sarima_model.predict(n_periods=n_periods, return_conf_int=True)
+index_of_fc = pd.date_range(
+    zillow_price_by_date.index[-1], periods=n_periods, freq="MS"
+)
 
 # make series for plotting purpose
 fitted_series = pd.Series(fitted, index=index_of_fc)
@@ -1489,11 +1474,7 @@ upper_series = pd.Series(confint[:, 1], index=index_of_fc)
 # Plot
 plt.plot(zillow_price_by_date)
 plt.plot(fitted_series, color="darkgreen")
-plt.fill_between(lower_series.index,
-                 lower_series,
-                 upper_series,
-                 color="k",
-                 alpha=0.15)
+plt.fill_between(lower_series.index, lower_series, upper_series, color="k", alpha=0.15)
 
 plt.title("SARIMA - Final Forecast of Housing Prices")
 plt.show()
@@ -1540,7 +1521,8 @@ plt.show()
 # Create and train forecaster
 # ==============================================================================
 forecaster = ForecasterAutoreg(
-    regressor=RandomForestRegressor(random_state=123), lags=6)
+    regressor=RandomForestRegressor(random_state=123), lags=6
+)
 
 forecaster.fit(y=data_train["value"])
 forecaster
@@ -1610,10 +1592,12 @@ error_mse = mean_squared_error(y_true=data_test["value"], y_pred=predictions)
 print(f"Test error (mse): {error_mse}")
 
 # split price data into train (pre-2020) and test (post-2020)
-train = zillow_price_by_date[zillow_price_by_date.date < pd.to_datetime(
-    "2020-01-01", format="%Y-%m-%d")]
-test = zillow_price_by_date[zillow_price_by_date.date >= pd.to_datetime(
-    "2020-01-01", format="%Y-%m-%d")]
+train = zillow_price_by_date[
+    zillow_price_by_date.date < pd.to_datetime("2020-01-01", format="%Y-%m-%d")
+]
+test = zillow_price_by_date[
+    zillow_price_by_date.date >= pd.to_datetime("2020-01-01", format="%Y-%m-%d")
+]
 
 # plot the train and test data...for some reason dates are numeric instead of dates...
 # TODO figure out why x-axis is numbers instead of dates --> was using index instead of date, had to convert the date to an index
@@ -1640,8 +1624,9 @@ y_pred = ARMAmodel.get_forecast(len(test.index))
 # generate a 95% confidence interval on the above predictions
 y_pred_df = y_pred.conf_int(alpha=0.05)
 # use ARMA model to predict the values at test index 288-316
-y_pred_df["Predictions"] = ARMAmodel.predict(start=y_pred_df.index[0],
-                                             end=y_pred_df.index[-1])
+y_pred_df["Predictions"] = ARMAmodel.predict(
+    start=y_pred_df.index[0], end=y_pred_df.index[-1]
+)
 y_pred_df.index = test.index  # set test index to y pred index...
 y_pred_out = y_pred_df["Predictions"]  # store the predictions
 # plot results
@@ -1650,8 +1635,7 @@ plt.legend()
 plt.show()
 
 # calculate RMSE
-arma_rmse = np.sqrt(
-    mean_squared_error(test["value"].values, y_pred_df["Predictions"]))
+arma_rmse = np.sqrt(mean_squared_error(test["value"].values, y_pred_df["Predictions"]))
 print("RMSE: ", arma_rmse)
 
 # %% ARIMA model
@@ -1665,8 +1649,9 @@ y_pred = ARIMAmodel.get_forecast(len(test.index))
 # generate a 95% confidence interval on the above predictions
 y_pred_df = y_pred.conf_int(alpha=0.05)
 # use ARMA model to predict the values at test index 288-316
-y_pred_df["Predictions"] = ARIMAmodel.predict(start=y_pred_df.index[0],
-                                              end=y_pred_df.index[-1])
+y_pred_df["Predictions"] = ARIMAmodel.predict(
+    start=y_pred_df.index[0], end=y_pred_df.index[-1]
+)
 y_pred_df.index = test.index  # set test index to y pred index...
 y_pred_out = y_pred_df["Predictions"]  # store the predictions
 # plot results
@@ -1675,8 +1660,7 @@ plt.legend()
 plt.show()
 
 # calculate RMSE
-arima_rmse = np.sqrt(
-    mean_squared_error(test["value"].values, y_pred_df["Predictions"]))
+arima_rmse = np.sqrt(mean_squared_error(test["value"].values, y_pred_df["Predictions"]))
 print("RMSE: ", arima_rmse)
 
 # %% SARIMA - Seasonal ARIMA
@@ -1691,8 +1675,9 @@ y_pred = SARIMAXmodel.get_forecast(len(test.index))
 # generate a 95% confidence interval on the above predictions
 y_pred_df = y_pred.conf_int(alpha=0.05)
 # use ARMA model to predict the values at test index 288-316
-y_pred_df["Predictions"] = SARIMAXmodel.predict(start=y_pred_df.index[0],
-                                                end=y_pred_df.index[-1])
+y_pred_df["Predictions"] = SARIMAXmodel.predict(
+    start=y_pred_df.index[0], end=y_pred_df.index[-1]
+)
 y_pred_df.index = test.index  # set test index to y pred index...
 y_pred_out = y_pred_df["Predictions"]  # store the predictions
 # plot results
@@ -1702,5 +1687,6 @@ plt.show()
 
 # calculate RMSE
 sarimax_rmse = np.sqrt(
-    mean_squared_error(test["value"].values, y_pred_df["Predictions"]))
+    mean_squared_error(test["value"].values, y_pred_df["Predictions"])
+)
 print("RMSE: ", sarimax_rmse)
