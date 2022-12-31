@@ -1,4 +1,4 @@
-# Housing Price Zillow Analysis
+# Rental Price Zillow Analysis
 
 ## Summary
 **Goal**: The goal of this project is to analyze geographical and temporal trends of US rental real estate prices since 2014. This includes visualizing rental data over time by region using Tableau. <!-- , and performing forecasting and anomaly detection to analyze expected future prices and detect unusual house prices. -->
@@ -18,7 +18,7 @@ The main goal is the visualization. Rental price prediction is more for practice
 
 **Results**: 
 - From the visualization, we saw as expected that the Northeast and California consistently had the highest median rental prices, while other expected metro regions also showed large increases over time (especially in Colorado, Washington, Texas, and Florida). We also see that up to 2021, rental prices across the country were slowly increasing. But in 2022, rental price increases accelerated, aligned with the headlines around inflation. More details: <!-- Also the visualization reminded me of the 2008 housing crisis, as we see some run-up of housing prices before 2008, but some drop-off after 2008. It seems like middle America was more negatively impacted than the coasts by the recession. Maybe add more... ... --> https://public.tableau.com/app/profile/tim1014/viz/ZillowRentalPrices-2014-2022/MedianRentalPricePerQuarterbyMetro
-- From the linear and random forest regressions, we see relatively large RMSE values. However, we achieved the goal of learning how to setup an ML pipeline in PySpark with many of the common stages (string indexer + one hot encoder, imputer, vector assembler, scaler, and the regression) and apply it to fit the training data and measure its performance on the test data.
+- From the linear and random forest regressions, we see relatively large RMSE values (around $340 for linear regression, $700 for random forest). However, we achieved the goal of learning how to setup an ML pipeline in PySpark with many of the common stages (string indexer + one hot encoder, imputer, vector assembler, scaler, and the regression) and apply it to fit the training data and measure its performance on the test data.
 
 
 ## Key skills being practiced in this project
