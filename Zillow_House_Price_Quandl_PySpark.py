@@ -1,75 +1,59 @@
-from sklearn.model_selection import TimeSeriesSplit  # Splitting for time series CV!
-from pyspark.sql.functions import col, when
-from statsmodels.tsa.statespace.sarimax import SARIMAX
-from joblib import dump, load
-from skforecast.model_selection import backtesting_forecaster
-from skforecast.model_selection import grid_search_forecaster
-from skforecast.ForecasterAutoregMultiOutput import ForecasterAutoregMultiOutput
-from skforecast.ForecasterAutoregCustom import ForecasterAutoregCustom
-from skforecast.ForecasterAutoreg import ForecasterAutoreg
-from sklearn.pipeline import make_pipeline
-from sklearn.metrics import mean_squared_error
-from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import Lasso
-from sklearn.linear_model import LinearRegression
-import pmdarima as pm
-from statsmodels.tsa.arima_model import ARIMA
-from statsmodels.tsa.stattools import acf
-from statsmodels.graphics.tsaplots import plot_predict
-from statsmodels.tsa.arima.model import ARIMA
-from pmdarima.arima.utils import ndiffs
-from statsmodels.graphics.tsaplots import plot_acf, plot_pacf
-from numpy import log
-from statsmodels.tsa.stattools import adfuller
-from pyspark.pandas.plot import matplotlib
-from pyspark.sql.functions import *
-from prophet import Prophet
-from sklearn import metrics
-from sklearn.cluster import DBSCAN
-from sklearn.preprocessing import StandardScaler
-from numpy.random import RandomState, SeedSequence
-from numpy.random import MT19937
-import matplotlib.pyplot as plt
-from pyspark.ml.evaluation import ClusteringEvaluator
-from pyspark.ml.clustering import KMeans
-from pyspark.ml.feature import VectorAssembler
-from pyspark.ml.feature import OneHotEncoder
-from pyspark.ml.feature import StringIndexer
-from pyspark.ml.tuning import CrossValidator, ParamGridBuilder
-from pyspark.ml.tuning import ParamGridBuilder, TrainValidationSplit
-from pyspark.ml.evaluation import RegressionEvaluator
-from pyspark.ml.regression import RandomForestRegressor
-from pyspark.ml.regression import LinearRegression
-from pyspark.ml.feature import (
-    StandardScaler,
-    OneHotEncoder,
-    StringIndexer,
-    Imputer,
-    VectorAssembler,
-)
-from pyspark.ml import Pipeline
-from pyspark.sql.functions import isnan, when, count, col, isnull
-from pyspark.sql.functions import coalesce
-from pyspark.sql import SparkSession, dataframe
-import pyspark
-from pyspark.sql import SparkSession
-import sys
+# import streamlit as st
+import datetime
 import os
-import nasdaqdatalink  # pip install nasdaq-data-link
-import pandas as pd
-import numpy as np
-
+import re
+import sys
 # import matplotlib
 # matplotlib.use('TkAgg')
 # import matplotlib.pyplot as plt
 # import seaborn as sns
 import warnings
-import re
+
+import matplotlib.pyplot as plt
+import nasdaqdatalink  # pip install nasdaq-data-link
+import numpy as np
+import pandas as pd
+import pmdarima as pm
+import pyspark
 import requests
 from bs4 import BeautifulSoup
-
-# import streamlit as st
-import datetime
+from joblib import dump, load
+from numpy import log
+from numpy.random import MT19937, RandomState, SeedSequence
+from pmdarima.arima.utils import ndiffs
+from prophet import Prophet
+from pyspark.ml import Pipeline
+from pyspark.ml.clustering import KMeans
+from pyspark.ml.evaluation import ClusteringEvaluator, RegressionEvaluator
+from pyspark.ml.feature import (Imputer, OneHotEncoder, StandardScaler,
+                                StringIndexer, VectorAssembler)
+from pyspark.ml.regression import LinearRegression, RandomForestRegressor
+from pyspark.ml.tuning import (CrossValidator, ParamGridBuilder,
+                               TrainValidationSplit)
+from pyspark.pandas.plot import matplotlib
+from pyspark.sql import SparkSession, dataframe
+from pyspark.sql.functions import *
+from pyspark.sql.functions import coalesce, col, count, isnan, isnull, when
+from skforecast.ForecasterAutoreg import ForecasterAutoreg
+from skforecast.ForecasterAutoregCustom import ForecasterAutoregCustom
+from skforecast.ForecasterAutoregMultiOutput import \
+    ForecasterAutoregMultiOutput
+from skforecast.model_selection import (backtesting_forecaster,
+                                        grid_search_forecaster)
+from sklearn import metrics
+from sklearn.cluster import DBSCAN
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.linear_model import Lasso, LinearRegression
+from sklearn.metrics import mean_squared_error
+from sklearn.model_selection import \
+    TimeSeriesSplit  # Splitting for time series CV!
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import StandardScaler
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf, plot_predict
+from statsmodels.tsa.arima.model import ARIMA
+from statsmodels.tsa.arima_model import ARIMA
+from statsmodels.tsa.statespace.sarimax import SARIMAX
+from statsmodels.tsa.stattools import acf, adfuller
 
 # import statsmodels
 
