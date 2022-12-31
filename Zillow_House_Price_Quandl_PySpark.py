@@ -13,60 +13,43 @@ import pmdarima as pm
 import pyspark
 import requests
 from bs4 import BeautifulSoup
-from joblib import dump
-from joblib import load
+from joblib import dump, load
 from numpy import log
-from numpy.random import MT19937
-from numpy.random import RandomState
-from numpy.random import SeedSequence
+from numpy.random import MT19937, RandomState, SeedSequence
 from pmdarima.arima.utils import ndiffs
 from prophet import Prophet
 from pyspark.ml import Pipeline
 from pyspark.ml.clustering import KMeans
-from pyspark.ml.evaluation import ClusteringEvaluator
-from pyspark.ml.evaluation import RegressionEvaluator
-from pyspark.ml.feature import Imputer
-from pyspark.ml.feature import OneHotEncoder
-from pyspark.ml.feature import StandardScaler
-from pyspark.ml.feature import StringIndexer
-from pyspark.ml.feature import VectorAssembler
-from pyspark.ml.regression import LinearRegression
-from pyspark.ml.regression import RandomForestRegressor
-from pyspark.ml.tuning import CrossValidator
-from pyspark.ml.tuning import ParamGridBuilder
-from pyspark.ml.tuning import TrainValidationSplit
+from pyspark.ml.evaluation import ClusteringEvaluator, RegressionEvaluator
+from pyspark.ml.feature import (Imputer, OneHotEncoder, StandardScaler,
+                                StringIndexer, VectorAssembler)
+from pyspark.ml.regression import LinearRegression, RandomForestRegressor
+from pyspark.ml.tuning import (CrossValidator, ParamGridBuilder,
+                               TrainValidationSplit)
 from pyspark.pandas.plot import matplotlib
-from pyspark.sql import dataframe
-from pyspark.sql import SparkSession
+from pyspark.sql import SparkSession, dataframe
 from pyspark.sql.functions import *
-from pyspark.sql.functions import coalesce
-from pyspark.sql.functions import col
-from pyspark.sql.functions import count
-from pyspark.sql.functions import isnan
-from pyspark.sql.functions import isnull
-from pyspark.sql.functions import when
+from pyspark.sql.functions import coalesce, col, count, isnan, isnull, when
 from skforecast.ForecasterAutoreg import ForecasterAutoreg
 from skforecast.ForecasterAutoregCustom import ForecasterAutoregCustom
-from skforecast.ForecasterAutoregMultiOutput import ForecasterAutoregMultiOutput
-from skforecast.model_selection import backtesting_forecaster
-from skforecast.model_selection import grid_search_forecaster
+from skforecast.ForecasterAutoregMultiOutput import \
+    ForecasterAutoregMultiOutput
+from skforecast.model_selection import (backtesting_forecaster,
+                                        grid_search_forecaster)
 from sklearn import metrics
 from sklearn.cluster import DBSCAN
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.linear_model import Lasso
-from sklearn.linear_model import LinearRegression
+from sklearn.linear_model import Lasso, LinearRegression
 from sklearn.metrics import mean_squared_error
-from sklearn.model_selection import TimeSeriesSplit  # Splitting for time series CV!
+from sklearn.model_selection import \
+    TimeSeriesSplit  # Splitting for time series CV!
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
-from statsmodels.graphics.tsaplots import plot_acf
-from statsmodels.graphics.tsaplots import plot_pacf
-from statsmodels.graphics.tsaplots import plot_predict
+from statsmodels.graphics.tsaplots import plot_acf, plot_pacf, plot_predict
 from statsmodels.tsa.arima.model import ARIMA
 from statsmodels.tsa.arima_model import ARIMA
 from statsmodels.tsa.statespace.sarimax import SARIMAX
-from statsmodels.tsa.stattools import acf
-from statsmodels.tsa.stattools import adfuller
+from statsmodels.tsa.stattools import acf, adfuller
 
 # import matplotlib
 # matplotlib.use('TkAgg')
